@@ -23,6 +23,7 @@ const CreateCategory = ({ setIsModalOpen }) => {
                 <h1 className="text-3xl font-bold mb-6">Create Category</h1>
 
                 <form onSubmit={handleSubmit}>
+                    @csrf
                     <div className="mb-4">
                         <label
                             htmlFor="name"

@@ -1,13 +1,17 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CategoryController extends Controller
 {
+    use AuthorizesRequests; // Include the AuthorizesRequests trait here
+
     public function index(){
         $categories = Auth::user()->categories()->latest()->get();
         return Inertia::render('Categories/Index', [
@@ -38,10 +42,15 @@ class CategoryController extends Controller
         return response()->json(['message' => 'Category updated successfully', 'category' => $category]);
     }
 
-
-    public function destroy(Category $category){
-        $this->authorize('delete', $category);
-        $category->delete();
-        return response()->json(['message' => 'Category deleted successfully']);
+    public function destroy(Category $category)
+{
+    // Ensure the category belongs to the authenticated user
+    if ($category->user_id !== Auth::id()) {
+        abort(403, 'Forbidden');
     }
+
+    $category->delete();
+
+    return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
+}
 }
