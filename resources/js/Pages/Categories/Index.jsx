@@ -5,15 +5,20 @@ import CreateCategories from "../../Components/Categories/Create";
 
 const CategoriesIndex = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const categories = [
-        { id: 1, name: "Food" },
-        { id: 2, name: "Transport" },
-        { id: 3, name: "Entertainment" },
-    ];
+    const { categories, flash } = usePage().props;
+
+    const handleDelete = (id) => {
+        if(confirm("Are you sure you want to delete this category?")){
+            Inertia.delete(route("categories.destroy", id), {
+                onSuccess: () => alert("Category deleted successfully!"),
+            });
+        }
+    };
 
     return (
         <div className="container mx-auto mt-8">
             <h1 className="text-3xl font-bold mb-6">Categories</h1>
+            {flash && <div className="bg-green-500 text-white p-4 rounded mb-4">{flash}</div>}
             <button
                 
                 className="bg-blue-500 text-white px-4 py-2 rounded-md mb-4 inline-block"
