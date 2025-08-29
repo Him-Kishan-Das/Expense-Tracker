@@ -1,18 +1,17 @@
-import React, { useState } from "react";
 import { useForm } from "@inertiajs/react";
+import React from "react";
 
-const CreateCategory = ({ setIsCreateModalOpen }) => {
-    const { data, setData, post, processing, reset, errors } = useForm({
-        name: "",
+const EditCategories = ({ category, setIsEditModalOpen }) => {
+    const { data, setData, patch, processing, errors } = useForm({
+        name: category.name,
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        post(route("categories.store"), {
+        patch(route("categories.update", category.id), {
             onSuccess: () => {
-                reset();
-                setIsCreateModalOpen(false);
+                setIsEditModalOpen(false); // Close the modal on success
             },
         });
     };
@@ -20,10 +19,9 @@ const CreateCategory = ({ setIsCreateModalOpen }) => {
     return (
         <div className="p-6">
             <div className="container mx-auto mt-8">
-                <h1 className="text-3xl font-bold mb-6">Create Category</h1>
+                <h1 className="text-3xl font-bold mb-6">Edit Category</h1>
 
                 <form onSubmit={handleSubmit}>
-                    @csrf
                     <div className="mb-4">
                         <label
                             htmlFor="name"
@@ -32,15 +30,13 @@ const CreateCategory = ({ setIsCreateModalOpen }) => {
                             Category Name
                         </label>
                         <input
-                            required
                             type="text"
                             id="name"
                             name="name"
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
-                            className="shadow appearance-none border rounded w-ull py-2 px-3 text-gray-700"
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
                         />
-                        {/* Display validation error if exists */}
                         {errors.name && (
                             <div className="text-red-500 text-sm mt-1">
                                 {errors.name}
@@ -52,7 +48,7 @@ const CreateCategory = ({ setIsCreateModalOpen }) => {
                         className="bg-blue-500 text-white px-4 py-2 rounded-md"
                         disabled={processing}
                     >
-                        Save Category
+                        Update Category
                     </button>
                 </form>
             </div>
@@ -60,4 +56,4 @@ const CreateCategory = ({ setIsCreateModalOpen }) => {
     );
 };
 
-export default CreateCategory;
+export default EditCategories;

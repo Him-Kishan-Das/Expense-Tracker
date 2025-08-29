@@ -32,14 +32,25 @@ class CategoryController extends Controller
         return redirect()->route('categories.index')->with('sucess', 'Category created successfully.');
     }
 
-    public function update(Request $request, Category $category){
-        $this->authorize('update', $category);
+    public function update(Request $request, Category $category)
+    {
+        // Authorize the update action on the category
+        if ($category->user_id !== Auth::id()) {
+            abort(403, 'Forbidden');
+        }
 
+        // Validate the incoming request
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,'. $category->id,
+            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
         ]);
 
-        return response()->json(['message' => 'Category updated successfully', 'category' => $category]);
+        // Update the category with the new name
+        $category->update([
+            'name' => $request->name,
+        ]);
+
+        // Return a success response
+        return redirect()->route('categories.index')->with('success', 'Category created successfully.');
     }
 
     public function destroy(Category $category)

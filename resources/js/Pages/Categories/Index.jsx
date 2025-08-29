@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { Link, usePage } from "@inertiajs/react"; // Added Inertia import for DELETE requests
+import { Link, usePage } from "@inertiajs/react"; 
 import Modal from "../../Components/Modal";
 import CreateCategories from "../../Components/Categories/Create";
+import EditCategories from "../../Components/Categories/Edit";
 import { Inertia } from "@inertiajs/inertia";
 
 const CategoriesIndex = () => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState(null);
 
     // Fetch categories and flash messages from props
     const { categories, flash } = usePage().props;
@@ -18,6 +21,11 @@ const CategoriesIndex = () => {
         }
     };
 
+    const handleEdit = (category) => {
+        setSelectedCategory(category); // Pass the entire category object
+        setIsEditModalOpen(true); // Open the Edit Modal
+    };
+
     return (
         <div className="container mx-auto mt-8">
             <h1 className="text-3xl font-bold mb-6">Categories</h1>
@@ -28,14 +36,24 @@ const CategoriesIndex = () => {
             {/* Add New Category Button */}
             <button
                 className="bg-blue-500 text-white px-4 py-2 rounded-md mb-4 inline-block"
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => setIsCreateModalOpen(true)}
             >
                 Add New Category
             </button>
 
             {/* Modal for Creating Categories */}
-            <Modal show={isModalOpen} maxWidth="md" onClose={() => setIsModalOpen(false)}>
-                <CreateCategories setIsModalOpen={setIsModalOpen} />
+            <Modal show={isCreateModalOpen} maxWidth="md" onClose={() => setIsCreateModalOpen(false)}>
+                <CreateCategories setIsModalOpen={setIsCreateModalOpen} />
+            </Modal>
+
+            {/* Modal for Editing Categories */}
+            <Modal show={isEditModalOpen} maxWidth="md" onClose={() => setIsEditModalOpen(false)}>
+                {selectedCategory && (
+                    <EditCategories
+                        category={selectedCategory}
+                        setIsEditModalOpen={setIsEditModalOpen}
+                    />
+                )}
             </Modal>
 
             {/* Categories Table */}
@@ -52,13 +70,12 @@ const CategoriesIndex = () => {
                             <tr key={category.id}>
                                 <td className="border border-gray-400 px-4 py-2">{category.name}</td>
                                 <td className="border border-gray-400 px-4 py-2">
-                                    {/* Corrected the Link URL */}
-                                    <Link
-                                        href={route("categories.edit", category.id)} // Dynamic URL generation
+                                    <button
+                                        onClick={() => handleEdit(category)} // Pass the entire category object
                                         className="text-blue-500 underline mr-4"
                                     >
                                         Edit
-                                    </Link>
+                                    </button>
                                     <button
                                         className="text-red-500 underline"
                                         onClick={() => handleDelete(category.id)} // Pass the category ID
