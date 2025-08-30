@@ -9,13 +9,13 @@ use Inertia\Inertia;
 
 // Welcome Page Route
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
+    return Inertia::render('HomePage', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
-});
+})->middleware('auth')->name('home');
 
 // Dashboard Route
 Route::get('/dashboard', function () {
