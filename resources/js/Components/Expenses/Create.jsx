@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { useForm } from '@inertiajs/inertia-react';
 
-export default function CreateExpense({ setIsModalOpen }) {
-    const [values, setValues] = useState({
+export default function CreateExpense({ setIsCreateModalOpen, categories }) {
+    const { data, setData, post, processing, errors, reset } = useForm({
         title: '',
         amount: '',
         date: '',
@@ -9,14 +10,18 @@ export default function CreateExpense({ setIsModalOpen }) {
     });
 
     const handleChange = (e) => {
-        setValues({ ...values, [e.target.name]: e.target.value });
+        setData(e.target.name, e.target.value);
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        alert(`Expense created: ${JSON.stringify(values, null, 2)}`);
-        setValues({ title: '', amount: '', date: '', category_id: '' });
-        setIsModalOpen(false);
+        
+        post(route("expenses.store"), {
+            onSucess: () => {
+                reset();
+                setIsCreateModalOpen(false);
+            }
+        })
     };
 
     return (
@@ -28,46 +33,54 @@ export default function CreateExpense({ setIsModalOpen }) {
                     <input
                         type="text"
                         name="title"
-                        value={values.title}
+                        value={data.title}
                         onChange={handleChange}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
                     />
+                    {errors.title && <div className="text-red-500 text-sm mt-1">{errors.title}</div>}
                 </div>
                 <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-bold mb-2">Amount</label>
                     <input
                         type="number"
                         name="amount"
-                        value={values.amount}
+                        value={data.amount}
                         onChange={handleChange}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
                     />
+                    {errors.amount && <div className="text-red-500 text-sm mt-1">{errors.amount}</div>}
                 </div>
                 <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-bold mb-2">Date</label>
                     <input
                         type="date"
                         name="date"
-                        value={values.date}
+                        value={data.date}
                         onChange={handleChange}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
                     />
+                    {errors.date && <div className="text-red-500 text-sm mt-1">{errors.date}</div>}
                 </div>
                 <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-bold mb-2">Category</label>
                     <select
                         name="category_id"
-                        value={values.category_id}
+                        value={data.category_id}
                         onChange={handleChange}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
                     >
                         <option value="">Select a category</option>
-                        <option value="1">Food</option>
-                        <option value="2">Transport</option>
-                        <option value="3">Entertainment</option>
+                        {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                                {category.name}
+                            </option>
+                        ))}
                     </select>
+                    {errors.category_id && (
+                        <div className="text-red-500 text-sm mt-1">{errors.category_id}</div>
+                    )}
                 </div>
-                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-md">
+                <button type="submit" onClick={handleSubmit} className="bg-blue-500 text-white px-4 py-2 rounded-md" disabled={processing}>
                     Save Expense
                 </button>
             </form>

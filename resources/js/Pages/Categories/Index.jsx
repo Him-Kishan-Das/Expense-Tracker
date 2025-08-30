@@ -22,18 +22,16 @@ const CategoriesIndex = () => {
     };
 
     const handleEdit = (category) => {
-        setSelectedCategory(category); // Pass the entire category object
-        setIsEditModalOpen(true); // Open the Edit Modal
+        setSelectedCategory(category); 
+        setIsEditModalOpen(true); 
     };
 
     return (
         <div className="container mx-auto mt-8">
             <h1 className="text-3xl font-bold mb-6">Categories</h1>
 
-            {/* Flash message */}
             {flash && <div className="bg-green-500 text-white p-4 rounded mb-4">{flash}</div>}
 
-            {/* Add New Category Button */}
             <button
                 className="bg-blue-500 text-white px-4 py-2 rounded-md mb-4 inline-block"
                 onClick={() => setIsCreateModalOpen(true)}
@@ -41,12 +39,10 @@ const CategoriesIndex = () => {
                 Add New Category
             </button>
 
-            {/* Modal for Creating Categories */}
             <Modal show={isCreateModalOpen} maxWidth="md" onClose={() => setIsCreateModalOpen(false)}>
-                <CreateCategories setIsModalOpen={setIsCreateModalOpen} />
+                <CreateCategories setIsCreateModalOpen={setIsCreateModalOpen} />
             </Modal>
 
-            {/* Modal for Editing Categories */}
             <Modal show={isEditModalOpen} maxWidth="md" onClose={() => setIsEditModalOpen(false)}>
                 {selectedCategory && (
                     <EditCategories
@@ -56,7 +52,6 @@ const CategoriesIndex = () => {
                 )}
             </Modal>
 
-            {/* Categories Table */}
             <table className="table-auto w-full border-collapse border border-gray-400">
                 <thead>
                     <tr>
@@ -71,14 +66,14 @@ const CategoriesIndex = () => {
                                 <td className="border border-gray-400 px-4 py-2">{category.name}</td>
                                 <td className="border border-gray-400 px-4 py-2">
                                     <button
-                                        onClick={() => handleEdit(category)} // Pass the entire category object
+                                        onClick={() => handleEdit(category)} 
                                         className="text-blue-500 underline mr-4"
                                     >
                                         Edit
                                     </button>
                                     <button
                                         className="text-red-500 underline"
-                                        onClick={() => handleDelete(category.id)} // Pass the category ID
+                                        onClick={() => handleDelete(category.id)} 
                                     >
                                         Delete
                                     </button>
