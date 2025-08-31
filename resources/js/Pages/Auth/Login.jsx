@@ -31,7 +31,7 @@ export default function Login({ status, canResetPassword }) {
                 </div>
             )}
 
-            <form onSubmit={submit}>
+            <form onSubmit={submit} className='space-y-6'>
                 <div>
                     <InputLabel htmlFor="email" value="Email" />
 
@@ -95,6 +95,19 @@ export default function Login({ status, canResetPassword }) {
                     </PrimaryButton>
                 </div>
             </form>
+
+            {/* /* Register Link */}
+            <div className="mt-6 text-center">
+                <span className="text-sm text-gray-600">
+                    Don't have an account?{' '}
+                </span>
+                <Link
+                    href={route('register')}
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-900"
+                >
+                    Register here
+                </Link>
+            </div>
         </GuestLayout>
     );
 }
