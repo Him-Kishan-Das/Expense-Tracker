@@ -6,6 +6,7 @@ use App\Models\Expense;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 use Inertia\Inertia;
 
 class ExpenseController extends Controller
@@ -118,5 +119,40 @@ class ExpenseController extends Controller
         $expense->delete();
 
         return redirect()->route('expenses.index')->with('success', 'Expense deleted successfully.');
+    }
+
+    public function exportCsv(Request $request){
+        $userId = Auth::id();
+
+        $expenses = Expense::where('user_id', $userId)->with('category')->get();
+        $csvHeader = ['Title','Amount', 'Date', 'Category'];
+        $csvData = [];
+
+        foreach($expenses as $expense){
+            $csvData[] = [
+                $expense->title,
+                $expense->amount,
+                $expense->date,
+                $expense->category->name ?? 'No Category',
+            ];
+        }
+
+        $handle = fopen('php://temp', 'r+');
+        fputcsv($handle, $csvHeader);
+
+        foreach($csvData as $row){
+            fputcsv($handle, $row);
+        }
+
+        rewind($handle);
+        $csvOutput = stream_get_contents($handle);
+        fclose($handle);
+
+        $filename = "expenses_" . now()->format('Y-m-d_H-i-s') . ".csv";
+
+        return Response::make($csvOutput, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 }

@@ -59,6 +59,8 @@ Route::middleware('auth')->group(function () {
 
     // Delete an expense
     Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+
+    Route::get('/expense/export-csv', [ExpenseController::class, 'exportCsv'])->name('expenses.exportCsv');
 });
 
 // Authentication Routes

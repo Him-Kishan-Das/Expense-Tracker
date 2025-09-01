@@ -45,10 +45,19 @@ const ExpensesIndex = () => {
         });
     };
 
+    const totalExpenses = expenses.reduce((total, expense) => total + parseFloat(expense.amount), 0);
+
+    const exportCsv = () => {
+        window.location.href = route("expenses.exportCsv");
+    };
+
     return (
         <AppLayout>
             <div className="container mx-auto mt-8">
                 <h1 className="text-3xl font-bold mb-6">Expenses</h1>
+                <button className="bg-blue-500 text-white px-4 py-2 rounded-md mb-4 inline-block"
+                onClick={exportCsv}>Export as CSV</button>
+
                 {/* Flash messages */}
                 {flash && (
                     <div className="bg-green-500 text-white p-4 rounded mb-4">
@@ -63,6 +72,7 @@ const ExpensesIndex = () => {
                 </button>
 
                 <form onSubmit={applyFilters} className="mb-6">
+                    
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">
@@ -101,6 +111,9 @@ const ExpensesIndex = () => {
                             />
                         </div>
                     </div>
+                    <p className="text-sm text-gray-500 mb-4">
+                    Note: All fields are optional. Use the ones you need to filter your expenses.
+                    </p>
                     <div className="mt-4">
                         <button
                             type="submit"
@@ -165,7 +178,7 @@ const ExpensesIndex = () => {
                                     {expense.title}
                                 </td>
                                 <td className="border border-gray-400 px-4 py-2">
-                                    ${expense.amount}
+                                    Rs. {expense.amount}
                                 </td>
                                 <td className="border border-gray-400 px-4 py-2">
                                     {expense.date}
@@ -191,6 +204,12 @@ const ExpensesIndex = () => {
                         ))}
                     </tbody>
                 </table>
+
+                <div className="mt-4 border-t border-gray-400 pt-4">
+                    <h2 className="text-xl font-bold">
+                        Total Expenses: Rs. {totalExpenses.toFixed(2)}
+                    </h2>
+                </div>
             </div>
         </AppLayout>
     );

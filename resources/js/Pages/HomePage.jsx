@@ -72,6 +72,9 @@ const Homepage = () => {
                             />
                         </div>
                     </div>
+                    <p className="text-sm text-gray-500 mb-4">
+                    Note: All fields are optional. Use the ones you need to filter your expenses.
+                    </p>
                     <div className="mt-4">
                         <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Apply Filters</button>
                     </div>
