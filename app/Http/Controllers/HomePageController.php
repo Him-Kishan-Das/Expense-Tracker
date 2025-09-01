@@ -14,7 +14,7 @@ class HomePageController extends Controller
         $userId = Auth::id();
 
         // Retrieve filter inputs from the request
-        $day = $request->query('day');
+        $day = $request->query('day'); 
         $month = $request->query('month');
         $year = $request->query('year');
 
@@ -44,11 +44,20 @@ class HomePageController extends Controller
                 ->get()
                 ->toArray();
 
-            // Ensure the categoriesData reflects the count of items
+            // Fetch categories data based on filters
             $categoriesData = DB::table('categories')
                 ->leftJoin('expenses', 'categories.id', '=', 'expenses.category_id')
                 ->select('categories.name', DB::raw('COUNT(expenses.id) as count'))
                 ->where('categories.user_id', $userId)
+                ->when($day, function ($query, $day) {
+                    return $query->where(DB::raw('DAY(expenses.date)'), $day);
+                })
+                ->when($month, function ($query, $month) {
+                    return $query->where(DB::raw('MONTH(expenses.date)'), $month);
+                })
+                ->when($year, function ($query, $year) {
+                    return $query->where(DB::raw('YEAR(expenses.date)'), $year);
+                })
                 ->groupBy('categories.name')
                 ->get()
                 ->toArray();

@@ -9,16 +9,9 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // Welcome Page Route
-Route::get('/', function () {
-    return Inertia::render('HomePage', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-
-})->middleware('auth')->name('home');
-Route::get('/', [HomePageController::class, 'index'])->middleware('auth')->name('home');
+Route::get('/', [HomePageController::class, 'index'])
+    ->middleware('auth')
+    ->name('home');
 
 // Dashboard Route
 Route::get('/dashboard', function () {

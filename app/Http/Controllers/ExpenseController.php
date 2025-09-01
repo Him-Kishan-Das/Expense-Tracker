@@ -10,15 +10,42 @@ use Inertia\Inertia;
 
 class ExpenseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $expenses = Auth::user()->expenses()->with('category')->latest()->get();
-        $categories = Auth::user()->categories()->get();
+        $userId = Auth::id();
 
-        return Inertia::render('Expenses/Index', [
-            'expenses' => $expenses,
-            'categories' => $categories,
-        ]);
+    // Retrieve filter inputs from the request
+    $day = $request->query('day'); 
+    $month = $request->query('month');
+    $year = $request->query('year');
+
+    // Prepare query for expenses
+    $query = Expense::where('user_id', $userId)->with('category');
+
+    // Apply filters dynamically
+    if (!empty($day)) {
+        $query->whereDay('date', $day);
+    }
+    if (!empty($month)) {
+        $query->whereMonth('date', $month);
+    }
+    if (!empty($year)) {
+        $query->whereYear('date', $year);
+    }
+
+    $expenses = $query->orderBy('date', 'desc')->get();
+
+    $categories = Auth::user()->categories()->get();
+
+    return Inertia::render('Expenses/Index', [
+        'expenses' => $expenses,
+        'categories' => $categories,
+        'filters' => [
+            'day' => $day,
+            'month' => $month,
+            'year' => $year,
+        ],
+    ]);
     }
 
     public function create()

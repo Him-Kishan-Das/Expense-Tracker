@@ -11,7 +11,11 @@ const ExpensesIndex = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState(null);
 
-    const { expenses, categories, flash } = usePage().props;
+    const { expenses, categories, filters, flash } = usePage().props;
+
+    const [day, setDay] = useState(filters?.day || "");
+    const [month, setMonth] = useState(filters?.month || "");
+    const [year, setYear] = useState(filters?.year || "");
 
     const handleEdit = (expense) => {
         setSelectedExpense(expense);
@@ -24,6 +28,21 @@ const ExpensesIndex = () => {
                 onSuccess: () => alert("Expenses deleted successfully"),
             });
         }
+    };
+
+    const applyFilters = (e) => {
+        e.preventDefault();
+
+        const filterData = {
+            day: day || null,
+            month: month || null,
+            year: year || null,
+        };
+
+        Inertia.get(route("expenses.index"), filterData, {
+            preserveState: true,
+            replace: true,
+        });
     };
 
     return (
@@ -42,6 +61,55 @@ const ExpensesIndex = () => {
                 >
                     Add New Expense
                 </button>
+
+                <form onSubmit={applyFilters} className="mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                                Day
+                            </label>
+                            <input
+                                type="number"
+                                value={day}
+                                onChange={(e) => setDay(e.target.value)}
+                                placeholder="Day (e.g., 15)"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                                Month
+                            </label>
+                            <input
+                                type="number"
+                                value={month}
+                                onChange={(e) => setMonth(e.target.value)}
+                                placeholder="Month (e.g., 8)"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                                Year
+                            </label>
+                            <input
+                                type="number"
+                                value={year}
+                                onChange={(e) => setYear(e.target.value)}
+                                placeholder="Year (e.g., 2025)"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            />
+                        </div>
+                    </div>
+                    <div className="mt-4">
+                        <button
+                            type="submit"
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                        >
+                            Apply Filters
+                        </button>
+                    </div>
+                </form>
 
                 <Modal
                     show={isCreateModalOpen}
