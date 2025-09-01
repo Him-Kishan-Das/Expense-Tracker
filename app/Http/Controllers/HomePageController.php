@@ -4,32 +4,67 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class HomePageController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Fetch expenses data for the logged-in user
-        $expensesData = DB::table('expenses')
-            ->join('categories', 'expenses.category_id', '=', 'categories.id') // Join the categories table
-            ->select('categories.name as category', DB::raw('SUM(expenses.amount) as amount')) // Select category name
-            ->where('expenses.user_id', Auth::id()) // Only include data for the current user
-            ->groupBy('categories.name') // Group by category name
-            ->get()
-            ->toArray(); // Ensure it's an array
+        $userId = Auth::id();
 
-        // Fetch categories data for the logged-in user
-        $categoriesData = DB::table('categories')
-            ->select('name', DB::raw('COUNT(*) as count'))
-            ->where('user_id', Auth::id()) // Only include data for the current user
-            ->groupBy('name')
-            ->get()
-            ->toArray(); // Ensure it's an array
+        // Retrieve filter inputs from the request
+        $day = $request->query('day');
+        $month = $request->query('month');
+        $year = $request->query('year');
 
-        return Inertia::render('HomePage', [
-            'expensesData' => $expensesData,
-            'categoriesData' => $categoriesData,
-        ]);
+        try {
+            // Prepare query for expenses
+            $query = DB::table('expenses')
+                ->join('categories', 'expenses.category_id', '=', 'categories.id')
+                ->where('expenses.user_id', $userId);
+
+            // Apply filters using SQL functions to extract day, month, and year from the DATE field
+            if (!empty($day)) {
+                $query->where(DB::raw('DAY(expenses.date)'), $day);
+            }
+
+            if (!empty($month)) {
+                $query->where(DB::raw('MONTH(expenses.date)'), $month);
+            }
+
+            if (!empty($year)) {
+                $query->where(DB::raw('YEAR(expenses.date)'), $year);
+            }
+
+            // Get filtered expenses data for the charts
+            $expensesData = $query
+                ->select('categories.name as category', DB::raw('SUM(expenses.amount) as amount'))
+                ->groupBy('categories.name')
+                ->get()
+                ->toArray();
+
+            // Ensure the categoriesData reflects the count of items
+            $categoriesData = DB::table('categories')
+                ->leftJoin('expenses', 'categories.id', '=', 'expenses.category_id')
+                ->select('categories.name', DB::raw('COUNT(expenses.id) as count'))
+                ->where('categories.user_id', $userId)
+                ->groupBy('categories.name')
+                ->get()
+                ->toArray();
+
+            return Inertia::render('HomePage', [
+                'expensesData' => $expensesData,
+                'categoriesData' => $categoriesData,
+                'filters' => [
+                    'day' => $day,
+                    'month' => $month,
+                    'year' => $year,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            // Redirect to the homepage with a flash error message
+            return redirect()->route('home')->with('error', 'There was a problem processing your filters. Please try again.');
+        }
     }
 }
