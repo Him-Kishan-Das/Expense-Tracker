@@ -1,21 +1,56 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, usePage } from "@inertiajs/react";
 import Modal from "../../Components/Modal";
 import CreateExpenses from "../../Components/Expenses/Create";
 import EditExpenses from "@/Components/Expenses/Edit";
+import Budget from "@/Components/Expenses/Budget";
 import { Inertia } from "@inertiajs/inertia";
 import AppLayout from "@/Layouts/AppLayout";
 
 const ExpensesIndex = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState(null);
 
     const { expenses, categories, filters, flash } = usePage().props;
 
+    // Initialize day, month, and year state variables
     const [day, setDay] = useState(filters?.day || "");
     const [month, setMonth] = useState(filters?.month || "");
     const [year, setYear] = useState(filters?.year || "");
+
+    // State for budget progress
+    const [budgetProgress, setBudgetProgress] = useState({
+        monthlyExpenses: 0,
+        budget: null,
+        spendingPercentage: 0,
+    });
+
+    useEffect(() => {
+        fetchBudgetProgress();
+    }, [month, year]);
+
+    // Fetch budget progress when month or year changes
+    const fetchBudgetProgress = () => {
+        const queryParams = new URLSearchParams({
+            month: month || new Date().getMonth() + 1,
+            year: year || new Date().getFullYear(),
+        });
+    
+        fetch(`/expenses/budget-progress?${queryParams}`)
+            .then((response) => response.json())
+            .then((data) => {
+                console.log("Budget Progress Data:", data); // Log the response
+                setBudgetProgress({
+                    ...data,
+                    monthlyExpenses: Number(data.monthlyExpenses) || 0, // Ensure it's a number
+                });
+            })
+            .catch((error) => {
+                console.error("Error fetching budget progress:", error);
+            });
+    };
 
     const handleEdit = (expense) => {
         setSelectedExpense(expense);
@@ -45,18 +80,69 @@ const ExpensesIndex = () => {
         });
     };
 
-    const totalExpenses = expenses.reduce((total, expense) => total + parseFloat(expense.amount), 0);
+    const exportFileteredCsv = () => {
+        const queryParams = new URLSearchParams({
+            day: day || "",
+            month: month || "",
+            year: year || "",
+        }).toString();
 
-    const exportCsv = () => {
-        window.location.href = route("expenses.exportCsv");
+        window.location.href = route("expenses.exportCsv") + "?" + queryParams;
     };
 
     return (
         <AppLayout>
             <div className="container mx-auto mt-8">
                 <h1 className="text-3xl font-bold mb-6">Expenses</h1>
-                <button className="bg-blue-500 text-white px-4 py-2 rounded-md mb-4 inline-block"
-                onClick={exportCsv}>Export as CSV</button>
+
+                {/* Budget Progress and Button */}
+                <div className="mb-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-bold">Monthly Budget Progress</h2>
+                        <button
+                            className="bg-indigo-600 text-white px-4 py-2 rounded-md"
+                            onClick={() => setIsBudgetModalOpen(true)}
+                        >
+                            Set Budget
+                        </button>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-6 mt-4">
+                        <div
+                            className="bg-green-500 h-6 rounded-full text-center text-white text-sm"
+                            style={{
+                                width: `${budgetProgress.spendingPercentage}%`,
+                            }}
+                        >
+                            {budgetProgress.spendingPercentage.toFixed(1)}%
+                        </div>
+                    </div>
+                    <p className="mt-2">
+    Spent: Rs. {(budgetProgress.monthlyExpenses || 0).toFixed(2)} / Budget: Rs.{" "}
+    {budgetProgress.budget?.amount || "Not Set"}
+</p>
+                </div>
+
+
+                {/* Budget Modal */}
+                <Modal
+                    show={isBudgetModalOpen}
+                    maxWidth="md"
+                    onClose={() => setIsBudgetModalOpen(false)}
+                >
+                    <Budget
+                        onClose={() => setIsBudgetModalOpen(false)}
+                        budget={budgetProgress.budget} // Use budgetProgress.budget
+                        month={month || new Date().getMonth() + 1}
+                        year={year || new Date().getFullYear()}
+                    />
+                </Modal>
+
+                <button
+                    className="bg-orange-400 text-white px-4 py-2 rounded-md mb-4 inline-block"
+                    onClick={exportFileteredCsv}
+                >
+                    Export as CSV
+                </button>
 
                 {/* Flash messages */}
                 {flash && (
@@ -65,19 +151,16 @@ const ExpensesIndex = () => {
                     </div>
                 )}
                 <button
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md mb-4 inline-block"
+                    className="bg-blue-500 text-white px-4 py-2 rounded-md mb-4 inline-block ml-2"
                     onClick={() => setIsCreateModalOpen(true)}
                 >
                     Add New Expense
                 </button>
 
                 <form onSubmit={applyFilters} className="mb-6">
-                    
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Day
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700">Day</label>
                             <input
                                 type="number"
                                 value={day}
@@ -87,9 +170,7 @@ const ExpensesIndex = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Month
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700">Month</label>
                             <input
                                 type="number"
                                 value={month}
@@ -99,9 +180,7 @@ const ExpensesIndex = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Year
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700">Year</label>
                             <input
                                 type="number"
                                 value={year}
@@ -112,7 +191,7 @@ const ExpensesIndex = () => {
                         </div>
                     </div>
                     <p className="text-sm text-gray-500 mb-4">
-                    Note: All fields are optional. Use the ones you need to filter your expenses.
+                        Note: All fields are optional. Use the ones you need to filter your expenses.
                     </p>
                     <div className="mt-4">
                         <button
@@ -154,35 +233,19 @@ const ExpensesIndex = () => {
                 <table className="table-auto w-full border-collapse border-gray-400 border">
                     <thead>
                         <tr>
-                            <th className="border border-gray-400 px-4 py-2">
-                                Title
-                            </th>
-                            <th className="border border-gray-400 px-4 py-2">
-                                Amount
-                            </th>
-                            <th className="border border-gray-400 px-4 py-2">
-                                Date
-                            </th>
-                            <th className="border border-gray-400 px-4 py-2">
-                                Category
-                            </th>
-                            <th className="border border-gray-400 px-4 py-2">
-                                Actions
-                            </th>
+                            <th className="border border-gray-400 px-4 py-2">Title</th>
+                            <th className="border border-gray-400 px-4 py-2">Amount</th>
+                            <th className="border border-gray-400 px-4 py-2">Date</th>
+                            <th className="border border-gray-400 px-4 py-2">Category</th>
+                            <th className="border border-gray-400 px-4 py-2">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {expenses.map((expense) => (
                             <tr key={expense.id}>
-                                <td className="border border-gray-400 px-4 py-2">
-                                    {expense.title}
-                                </td>
-                                <td className="border border-gray-400 px-4 py-2">
-                                    Rs. {expense.amount}
-                                </td>
-                                <td className="border border-gray-400 px-4 py-2">
-                                    {expense.date}
-                                </td>
+                                <td className="border border-gray-400 px-4 py-2">{expense.title}</td>
+                                <td className="border border-gray-400 px-4 py-2">Rs. {expense.amount}</td>
+                                <td className="border border-gray-400 px-4 py-2">{expense.date}</td>
                                 <td className="border border-gray-400 px-4 py-2">
                                     {expense.category?.name || "No Category"}
                                 </td>
@@ -206,9 +269,7 @@ const ExpensesIndex = () => {
                 </table>
 
                 <div className="mt-4 border-t border-gray-400 pt-4">
-                    <h2 className="text-xl font-bold">
-                        Total Expenses: Rs. {totalExpenses.toFixed(2)}
-                    </h2>
+                    <h2 className="text-xl font-bold">Total Expenses: Rs. {expenses.reduce((total, expense) => total + parseFloat(expense.amount), 0).toFixed(2)}</h2>
                 </div>
             </div>
         </AppLayout>

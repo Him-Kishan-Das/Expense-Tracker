@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExpenseController;
@@ -60,7 +61,12 @@ Route::middleware('auth')->group(function () {
     // Delete an expense
     Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
 
-    Route::get('/expense/export-csv', [ExpenseController::class, 'exportCsv'])->name('expenses.exportCsv');
+    Route::get('/expenses/export-csv', [ExpenseController::class, 'exportCsv'])->name('expenses.exportCsv');
+});
+
+Route::middleware('auth')->group(function(){
+    Route::post('/budget', [BudgetController::class, 'store'])->name('budget.store');
+    Route::get('/expenses/budget-progress', [ExpenseController::class, 'getBudgetProgress'])->name('expenses.budgetProgress');
 });
 
 // Authentication Routes

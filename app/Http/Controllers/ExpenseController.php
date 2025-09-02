@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\Category;
+use App\Models\Budget;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
@@ -15,38 +16,41 @@ class ExpenseController extends Controller
     {
         $userId = Auth::id();
 
-    // Retrieve filter inputs from the request
-    $day = $request->query('day'); 
-    $month = $request->query('month');
-    $year = $request->query('year');
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
 
-    // Prepare query for expenses
-    $query = Expense::where('user_id', $userId)->with('category');
+        // Retrieve filter inputs from the request
+        $day = $request->query('day');
+        $month = $request->query('month');
+        $year = $request->query('year');
 
-    // Apply filters dynamically
-    if (!empty($day)) {
-        $query->whereDay('date', $day);
-    }
-    if (!empty($month)) {
-        $query->whereMonth('date', $month);
-    }
-    if (!empty($year)) {
-        $query->whereYear('date', $year);
-    }
+        // Prepare query for expenses
+        $query = Expense::where('user_id', $userId)->with('category');
 
-    $expenses = $query->orderBy('date', 'desc')->get();
+        // Apply filters dynamically
+        if (!empty($day)) {
+            $query->whereDay('date', $day);
+        }
+        if (!empty($month)) {
+            $query->whereMonth('date', $month);
+        }
+        if (!empty($year)) {
+            $query->whereYear('date', $year);
+        }
 
-    $categories = Auth::user()->categories()->get();
+        $expenses = $query->orderBy('date', 'desc')->get();
 
-    return Inertia::render('Expenses/Index', [
-        'expenses' => $expenses,
-        'categories' => $categories,
-        'filters' => [
-            'day' => $day,
-            'month' => $month,
-            'year' => $year,
-        ],
-    ]);
+        $categories = Auth::user()->categories()->get();
+
+        return Inertia::render('Expenses/Index', [
+            'expenses' => $expenses,
+            'categories' => $categories,
+            'filters' => [
+                'day' => $day,
+                'month' => $month,
+                'year' => $year,
+            ],
+        ]);
     }
 
     public function create()
@@ -124,7 +128,25 @@ class ExpenseController extends Controller
     public function exportCsv(Request $request){
         $userId = Auth::id();
 
-        $expenses = Expense::where('user_id', $userId)->with('category')->get();
+        $day = $request->query('day');
+        $month = $request->query('month');
+        $year = $request->query('year');
+
+        $query = Expense::where('user_id', $userId)->with('category');
+
+        if(!empty($day)){
+            $query->whereDay('date', $day);
+        }
+
+        if(!empty($month)){
+            $query->whereMonth('date', $month);
+        }
+
+        if(!empty($year)){
+            $query->whereYear('date', $year);
+        }
+
+        $expenses = $query->orderBy('date', 'desc')->get();
         $csvHeader = ['Title','Amount', 'Date', 'Category'];
         $csvData = [];
 
@@ -153,6 +175,38 @@ class ExpenseController extends Controller
         return Response::make($csvOutput, 200, [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function getBudgetProgress(Request $request)
+    {
+        $userId = Auth::id();
+    
+        // Get the current or filtered month/year
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+    
+        $month = $request->query('month', $currentMonth); // Default to current month
+        $year = $request->query('year', $currentYear);   // Default to current year
+    
+        // Calculate monthly expenses
+        $monthlyExpenses = (float) Expense::where('user_id', $userId)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->sum('amount');
+    
+        // Get the current budget
+        $budget = Budget::currentMonthBudget($userId, $month, $year);
+    
+        // Calculate spending percentage
+        $spendingPercentage = $budget && $budget->amount 
+            ? min(($monthlyExpenses / $budget->amount) * 100, 100) 
+            : 0;
+    
+        return response()->json([
+            'monthlyExpenses' => $monthlyExpenses,
+            'budget' => $budget,
+            'spendingPercentage' => $spendingPercentage,
         ]);
     }
 }
