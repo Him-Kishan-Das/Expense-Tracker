@@ -90,6 +90,14 @@ const ExpensesIndex = () => {
         window.location.href = route("expenses.exportCsv") + "?" + queryParams;
     };
 
+    const formatMonthYear = (month, year) => {
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+        return `${monthNames[month - 1]}, ${year}`; // month is 1-based
+    };
+
     return (
         <AppLayout>
             <div className="container mx-auto mt-8">
@@ -106,6 +114,9 @@ const ExpensesIndex = () => {
                             Set Budget
                         </button>
                     </div>
+                    <p className="text-sm text-gray-700 mb-2">
+                        Showing Data for: <strong>{formatMonthYear(month || new Date().getMonth() + 1, year || new Date().getFullYear())}</strong>
+                    </p>
                     <div className="w-full bg-gray-200 rounded-full h-6 mt-4">
                         <div
                             className="bg-green-500 h-6 rounded-full text-center text-white text-sm"
